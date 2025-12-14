@@ -99,5 +99,3 @@ Buka browser dan akses: `http://localhost:8000`
 ## 📄 Lisensi
 
 [MIT license](https://opensource.org/licenses/MIT).
-
-```
