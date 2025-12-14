@@ -16,66 +16,46 @@ class OwnerController extends Controller
     // DASHBOARD & LISTING
     // =========================================================================
 
-    /**
-     * Menampilkan Dashboard Pemilik.
-     * Memisahkan permintaan sewa menjadi 'Baru Masuk' (Pending) dan 'Arsip' (Contacted).
-     */
     public function index()
     {
         $myKosts = Kost::where('user_id', Auth::id())->get();
         $kostIds = $myKosts->pluck('id');
         
-        // 1. Ambil permintaan yang statusnya PENDING (Belum dihubungi)
         $incomingRequests = RentRequest::whereIn('kost_id', $kostIds)
                             ->where('status', 'pending')
                             ->with(['user', 'kost'])
                             ->orderBy('created_at', 'desc')
                             ->get();
 
-        // 2. Ambil permintaan yang statusnya CONTACTED (Sudah dihubungi / Arsip)
         $archivedRequests = RentRequest::whereIn('kost_id', $kostIds)
                             ->where('status', 'contacted')
                             ->with(['user', 'kost'])
-                            ->orderBy('updated_at', 'desc') // Urutkan dari yang terakhir dihubungi
+                            ->orderBy('updated_at', 'desc')
                             ->get();
 
         return view('owner.dashboard', compact('myKosts', 'incomingRequests', 'archivedRequests'));
     }
 
-    // =========================================================================
-    // MANAJEMEN REQUEST (KONTAK & ARSIP)
-    // =========================================================================
-
-    /**
-     * Menandai calon penyewa sebagai 'sudah dihubungi' dan redirect ke WhatsApp.
-     */
     public function markAsContacted($id)
     {
-        // Cari request, pastikan milik salah satu kost owner ini (Security Check)
         $rentRequest = RentRequest::with(['user', 'kost'])->findOrFail($id);
         
         if ($rentRequest->kost->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke permintaan ini.');
         }
 
-        // Update status jadi 'contacted' agar masuk ke Arsip
         $rentRequest->update(['status' => 'contacted']);
 
-        // Siapkan Link WhatsApp
-        // Mengubah format 08xx menjadi 628xx
         $phone = preg_replace('/^0/', '62', $rentRequest->user->phone); 
-        
-        // Pesan otomatis
         $text = urlencode("Halo {$rentRequest->user->name}, saya pemilik kost {$rentRequest->kost->name}. Saya melihat permintaan sewa Anda di Eazy Kost. Apakah masih berminat?");
         
         $waUrl = "https://wa.me/{$phone}?text={$text}";
 
-        // Redirect user ke Link WA (Membuka tab baru biasanya diatur di view dengan target="_blank")
         return redirect()->away($waUrl);
     }
 
     // =========================================================================
-    // CRUD KOST (CREATE, STORE, SHOW, UPDATE, DESTROY)
+    // CRUD KOST
     // =========================================================================
 
     public function create()
@@ -98,6 +78,8 @@ class OwnerController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048' 
         ]);
 
+        // Validasi manual: Minimal salah satu harga harus diisi
+        // Kita cek dari input request langsung untuk create
         if (!$request->price_daily && !$request->price_monthly && !$request->price_yearly) {
             return back()->withErrors(['price_monthly' => 'Minimal salah satu jenis harga harus diisi!'])->withInput();
         }
@@ -155,14 +137,13 @@ class OwnerController extends Controller
             'new_images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048'
         ]);
 
-        // 2. Logic Smart Upload (Cek Slot)
+        // 2. Logic Smart Upload
         $currentCount = $kost->images()->count();
         $deleteCount = count($request->delete_images ?? []);
         $newCount = count($request->file('new_images') ?? []);
         $remainingSlots = 10 - ($currentCount - $deleteCount);
 
         $filesToUpload = $request->file('new_images') ?? [];
-        
         if ($newCount > $remainingSlots) {
             $filesToUpload = array_slice($filesToUpload, 0, $remainingSlots);
         }
@@ -171,13 +152,16 @@ class OwnerController extends Controller
              return back()->withErrors(['new_images' => 'Kost harus memiliki minimal 1 foto.']);
         }
 
-        // 3. Update Data Teks
+        // 3. Update Data Teks (PERBAIKAN ERROR DI SINI)
+        // Kita gunakan $request->input('check_...') == '1' untuk mengecek status checkbox.
+        // Kita gunakan ($validated['price_...'] ?? null) agar tidak error jika key tidak ada.
+        
         $kost->update([
             'name' => $validated['name'],
             'description' => $validated['description'],
-            'price_daily' => $request->has('check_daily') ? $validated['price_daily'] : null,
-            'price_monthly' => $request->has('check_monthly') ? $validated['price_monthly'] : null,
-            'price_yearly' => $request->has('check_yearly') ? $validated['price_yearly'] : null,
+            'price_daily' => ($request->input('check_daily') == '1') ? ($validated['price_daily'] ?? null) : null,
+            'price_monthly' => ($request->input('check_monthly') == '1') ? ($validated['price_monthly'] ?? null) : null,
+            'price_yearly' => ($request->input('check_yearly') == '1') ? ($validated['price_yearly'] ?? null) : null,
             'room_total' => $validated['room_total'],
             'location' => $validated['location'],
             'address' => $validated['address'],
@@ -200,11 +184,11 @@ class OwnerController extends Controller
             KostImage::create([
                 'kost_id' => $kost->id,
                 'image_path' => $path,
-                'sort_order' => 999, // Taruh di belakang sementara
+                'sort_order' => 999,
             ]);
         }
 
-        // 6. Update Urutan Gambar (Sorting dari Frontend)
+        // 6. Update Urutan Gambar
         if ($request->has('ordered_ids') && !empty($request->ordered_ids)) {
             $order = 1;
             $orderedIds = explode(',', $request->ordered_ids);
@@ -232,7 +216,6 @@ class OwnerController extends Controller
             }
         }
 
-        // Hapus Data (Cascade)
         $kost->delete();
 
         return redirect()->route('owner.dashboard')->with('success', 'Kost berhasil dihapus secara permanen.');
