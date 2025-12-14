@@ -1,59 +1,103 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏠 Eazy Kost
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Eazy Kost** adalah platform marketplace berbasis web modern yang menghubungkan pemilik kost dengan pencari kost. Dibangun menggunakan **Laravel**, aplikasi ini menawarkan pengalaman pengguna yang mulus untuk manajemen properti, pencarian hunian, dan pengelolaan penyewaan.
 
-## About Laravel
+![Eazy Kost Preview](public/preview.png) ## ✨ Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 👤 Untuk Pencari Kost (Penyewa)
+* **Pencarian Real-time:** Mencari kost berdasarkan nama tanpa reload halaman (menggunakan **Alpine.js**).
+* **Detail Lengkap:** Melihat galeri foto (carousel), fasilitas, deskripsi, dan opsi harga (Harian/Bulanan/Tahunan).
+* **Ajukan Sewa:** Mengirim permintaan sewa ke pemilik hanya dengan satu klik.
+* **Riwayat Pengajuan:** Memantau status pengajuan sewa pada halaman khusus (`/my-requests`).
+* **Kontak Langsung:** Terintegrasi dengan **WhatsApp** untuk menghubungi pemilik secara langsung.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🏢 Untuk Pemilik Kost (Owner)
+* **Dashboard Statistik:** Memantau jumlah properti, total kamar, dan permintaan sewa baru vs arsip.
+* **Manajemen Kost (CRUD):** Tambah, edit, dan hapus data kost beserta foto-fotonya.
+* **Manajemen Permintaan:**
+    * Menerima notifikasi permintaan sewa baru (Pending).
+    * Menghubungi peminat via WhatsApp (otomatis mengubah status menjadi *Contacted* & masuk Arsip).
+    * Fitur **Arsip** untuk melihat riwayat peminat yang sudah dihubungi agar dashboard tetap bersih.
+* **Smart Upload:** Sistem upload gambar dengan validasi slot maksimal 10 foto, fitur hapus, dan pengaturan urutan foto (*sorting*).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠️ Teknologi yang Digunakan
 
-## Learning Laravel
+* **Backend:** Laravel 11 (PHP Framework)
+* **Frontend:** Blade Templates
+* **Styling:** Tailwind CSS (via CDN)
+* **Interactivity:** Alpine.js (via CDN)
+* **Database:** MySQL / SQLite
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🚀 Panduan Instalasi (Lokal)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Ikuti langkah-langkah berikut untuk menjalankan proyek ini di komputer lokal Anda:
 
-## Laravel Sponsors
+### 1. Clone Repositori
+```bash
+git clone [https://github.com/username/eazy-kost.git](https://github.com/username/eazy-kost.git)
+cd eazy-kost
+````
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2\. Install Dependencies
 
-### Premium Partners
+Pastikan Anda memiliki PHP dan Composer yang terinstal.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+composer install
+npm install && npm run build
+```
 
-## Contributing
+### 3\. Konfigurasi Environment
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Salin file contoh `.env` dan buat kunci aplikasi.
 
-## Code of Conduct
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+*Catatan: Pastikan Anda mengatur konfigurasi database (`DB_DATABASE`, `DB_USERNAME`, dll) di dalam file `.env`.*
 
-## Security Vulnerabilities
+### 4\. Setup Database
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Jalankan migrasi untuk membuat tabel dan seeder (opsional) untuk data awal.
 
-## License
+```bash
+php artisan migrate --seed
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 5\. Konfigurasi Penyimpanan Gambar (PENTING) ⚠️
+
+Agar foto yang diupload dapat muncul, Anda harus membuat *symbolic link*.
+
+**Jika Anda baru saja memindahkan project dari komputer lain atau foto tidak muncul:**
+
+1.  Hapus folder `public/storage` secara manual.
+2.  Jalankan perintah berikut di terminal:
+
+<!-- end list -->
+
+```bash
+php artisan storage:link
+```
+
+### 6\. Jalankan Server
+
+```bash
+php artisan serve
+```
+
+Buka browser dan akses: `http://localhost:8000`
+
+## 📝 Catatan Penggunaan
+
+  * **Registrasi:** Pengguna baru dapat mendaftar dan memilih peran sebagai **Penyewa** atau **Pemilik**.
+  * **Akses Role:**
+      * Akun **Pemilik** memiliki akses ke Dashboard Pemilik, Tambah Kost, dan Manajemen Request.
+      * Akun **Penyewa** hanya memiliki akses ke Beranda, Pencarian, Detail Kost, dan Riwayat Pengajuan.
+
+## 📄 Lisensi
+
+[MIT license](https://opensource.org/licenses/MIT).
+
+```
