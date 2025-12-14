@@ -67,6 +67,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                
                 <div class="lg:col-span-2 space-y-8">
                     <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                         <h2 class="text-lg font-bold text-gray-900 mb-4">Deskripsi & Fasilitas</h2>
@@ -78,7 +79,21 @@
                         <p class="text-sm text-gray-500 mt-1">Area: {{ $kost->location }}</p>
                     </div>
                 </div>
+
                 <div class="space-y-6">
+                    
+                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Kapasitas Kost</h3>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Kamar Kosong</span>
+                                <span class="text-sm text-gray-400">Unit Tersedia</span>
+                            </div>
+                            <span class="text-3xl font-extrabold text-gray-900">{{ $kost->room_total }}</span>
+                        </div>
+                    </div>
+
                     <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                         <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Daftar Harga</h3>
                         <div class="space-y-3">
@@ -127,9 +142,7 @@
                                             <template x-for="(img, index) in activeImages" :key="img.id">
                                                 <div class="relative group aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white shadow-sm transition-all duration-300">
                                                     <img :src="'/storage/' + img.image_path" class="w-full h-full object-cover">
-                                                    
                                                     <div class="absolute top-1 left-1 bg-black/60 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold" x-text="index + 1"></div>
-
                                                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
                                                         <div class="flex gap-2">
                                                             <button type="button" @click="moveImage(index, -1)" class="p-1 bg-white rounded-full hover:bg-primary hover:text-white transition" :disabled="index === 0" :class="index === 0 ? 'opacity-50 cursor-not-allowed' : ''">
@@ -149,15 +162,7 @@
                                             Tambah Foto Baru 
                                             <span class="font-normal text-gray-500 text-xs ml-1">(Sisa slot: <span x-text="remainingSlots"></span>)</span>
                                         </label>
-                                        
-                                        <input type="file" 
-                                               id="newImagesInput"
-                                               name="new_images[]" 
-                                               multiple 
-                                               accept="image/*" 
-                                               @change="handleFileUpload($event)"
-                                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-primary hover:file:bg-orange-100 cursor-pointer">
-                                        
+                                        <input type="file" id="newImagesInput" name="new_images[]" multiple accept="image/*" @change="handleFileUpload($event)" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-primary hover:file:bg-orange-100 cursor-pointer">
                                         <p class="text-xs text-gray-400 mt-1" x-show="uploadMsg" x-text="uploadMsg"></p>
                                     </div>
 
@@ -262,59 +267,45 @@
                 
                 // DATA GAMBAR
                 originalImages: initialImages,
-                activeImages: initialImages, // Gambar yang sedang tampil (belum dihapus)
-                deletedImages: [], // ID gambar yang akan dihapus
-                orderedIdsString: '', // String urutan ID untuk dikirim ke backend
-                uploadMsg: '', // Pesan error/info upload
+                activeImages: initialImages,
+                deletedImages: [],
+                orderedIdsString: '',
+                uploadMsg: '',
 
                 initData() {
-                    // Update string urutan saat inisialisasi
                     this.updateOrderedString();
                 },
 
-                // 1. LOGIKA HAPUS GAMBAR LAMA
                 deleteImage(id) {
                     this.deletedImages.push(id);
-                    // Hapus dari tampilan aktif
                     this.activeImages = this.activeImages.filter(img => img.id !== id);
                     this.updateOrderedString();
                 },
 
-                // 2. LOGIKA PINDAH POSISI (Kiri/Kanan)
                 moveImage(index, direction) {
                     const newIndex = index + direction;
-                    // Cek batas array
                     if (newIndex < 0 || newIndex >= this.activeImages.length) return;
-
-                    // Swap elemen array
                     const temp = this.activeImages[index];
                     this.activeImages[index] = this.activeImages[newIndex];
                     this.activeImages[newIndex] = temp;
-                    
-                    // Trigger reactivity Alpine (kadang perlu reassign array baru)
                     this.activeImages = [...this.activeImages];
                     this.updateOrderedString();
                 },
 
-                // Helper: Update hidden input string
                 updateOrderedString() {
                     this.orderedIdsString = this.activeImages.map(img => img.id).join(',');
                 },
 
-                // Getter untuk sisa slot
                 get remainingSlots() {
                     return 10 - this.activeImages.length;
                 },
 
-                // 3. LOGIKA SMART UPLOAD
                 handleFileUpload(event) {
                     const files = event.target.files;
                     const max = this.remainingSlots;
                     
                     if (files.length > max) {
                         this.uploadMsg = `Anda memilih ${files.length} file, tapi sisa slot hanya ${max}. ${files.length - max} file akan diabaikan.`;
-                        
-                        // Memotong file menggunakan DataTransfer
                         const dataTransfer = new DataTransfer();
                         for (let i = 0; i < max; i++) {
                             dataTransfer.items.add(files[i]);
@@ -325,7 +316,6 @@
                     }
                 },
 
-                // Persiapan sebelum submit (Final check)
                 prepareSubmit() {
                     this.updateOrderedString();
                 }
